@@ -1,0 +1,12 @@
+sudo apt-get install software-properties-common
+sudo add-apt-repository -y ppa:ethereum/ethereum
+sudo apt-get update
+sudo apt-get install ethereum
+
+• Create directories for instances, Ins1, ins2
+• Make accounts: geth account new --datadir /path/to/ins1
+• Create genesis block in each instance
+• geth --identity "ins2" --datadir . init Genesis.json
+• geth --datadir . --port="30301" console --networkid 6666
+
+sample contract : https://www.ethereum.org/greeter
