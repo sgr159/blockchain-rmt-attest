@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<title>{{.PageTitle}}</title>
+</head>
+
+<div class="w3-container w3-blue-grey w3-center w3-round">
+	<h1>{{.PageTitle}}</h1>
+</div>
+
+<div class="w3-bar w3-black">
+  <a href="/" class="w3-bar-item w3-button">Display</a>
+  <a href="/verifyPage" class="w3-bar-item w3-button">Add</a>
+</div>
+
+<div id="Accordians" class="w3-twothird w3-responsive" style="outline:none"></div>
+<div id="chartContainer" class="w3-third"></div>
+
+<script>
+window.appData = {}
+
+function showDiv(id) {
+    var x = document.getElementById(id);
+    if (x.className.indexOf("w3-show") == -1) {
+        x.className += " w3-show";
+        x.previousElementSibling.className += " w3-grey";
+    } else { 
+        x.className = x.className.replace(" w3-show", "");
+        x.previousElementSibling.className = 
+        x.previousElementSibling.className.replace("w3-grey", "");
+    }
+}
+
+var hostBinMap = new Map()
+var hostComplianceMap = new Map()
+var total_compliance = {{.Compliance}}
+
+{{with $hosts:=.PageBinaryDetails}}
+{{range $host := $hosts}}
+	var key = {{$host.Name}}
+	var data = []
+	i = 0
+  	{{with $bins:=$host.Data}}
+	{{range $bin := $bins}}
+		data[i] = {"Name":{{$bin.Name}},"Measurement":{{$bin.Measurement}},"Compliance":{{$bin.Result}}}
+		i++
+	{{end}}
+	{{end}}
+	hostBinMap.set(key,data)
+	hostComplianceMap.set(key,{{$host.Compliance}})
+{{end}}
+{{end}}
+
+function addAccordians() {
+	var accordians = document.getElementById('Accordians');
+	accStr = ""
+	for (var[key,value] of hostBinMap) {
+		accStr += '<button onclick="showDiv(\''+key+'\')" class="w3-button w3-block w3-left-align w3-border">'+key+' Compliance: '+hostComplianceMap.get(key)+'%<i class="fa fa-caret-down w3-right"></i></button>'
+		accStr += '<div id='+key+' class="w3-containers w3-hide">\
+		<table class="w3-table-all w3-small w3-hoverable w3-card">\
+		<tr>\
+			<th>Binary</th>\
+			<th>Measurement</th>\
+			<th>Compliant</th>\
+		</tr>'
+		for (i=0;i<value.length;i++) {
+			accStr += '\
+			<tr>\
+				<td>'+value[i]["Name"]+'</td>\
+				<td>'+value[i]["Measurement"]+'</td>\
+				<td>'+(value[i]["Compliance"]?'Y':'N')+'</td>\
+			</tr>'
+		}
+		accStr +='</table></div>'
+		accordians.innerHTML = accStr
+	}
+}
+
+window.onload = function() {
+	addAccordians()
+	var chart = new CanvasJS.Chart("chartContainer", {
+		animationEnabled: true,
+		title:{
+			text: "Compliance Report",
+			horizontalAlign: "left"
+		},
+		data: [{
+			type: "doughnut",
+			startAngle: 60,
+			//innerRadius: 60,
+			indexLabelFontSize: 17,
+			indexLabel: "{label} - {y}%",
+			toolTipContent: "<b>{label}:</b> {y}%",
+			dataPoints: [
+				{ y: total_compliance, label: "Compliant" },
+				{ y: 100 - total_compliance, label: "Non-Compliant" }
+			]
+		}]
+	});
+
+	chart.render()
+}
+</script>
+
+</html>
+
+
